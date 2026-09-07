@@ -1,0 +1,54 @@
+# =========================
+# .NET / C#
+# =========================
+bin/
+obj/
+*.user
+*.userosscache
+*.sln.docstates
+
+# =========================
+# IDEs & Tools
+# =========================
+# JetBrains Rider
+.idea/
+*.sln.iml
+*.DotSettings.user
+
+# Visual Studio / VS Code
+.vs/
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+
+# =========================
+# Secrets & Configurations
+# =========================
+appsettings.Development.json
+appsettings.Local.json
+*.env
+.env
+secrets.json
+
+# =========================
+# Frontend (React / Vite)
+# =========================
+node_modules/
+dist/
+build/
+.npm/
+.eslintcache
+
+# =========================
+# Database & Docker
+# =========================
+# If you ever mount a local folder for Postgres data instead of a Docker volume
+pgdata/
+postgres_data/
+
+# =========================
+# OS Files
+# =========================
+.DS_Store
+Thumbs.db
