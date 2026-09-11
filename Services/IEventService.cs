@@ -5,7 +5,7 @@ namespace CinemaProj.Services;
 
 public interface IEventService
 {
-     Task<List<Event>> GetAllAsync();
-     Task<Event> GetByIdAsync(Guid id);
-     Task<Event> CreateAsync(RegisterEvent dto);
+     Task<List<EventListDto>> GetAllAsync();
+     Task<EventDto?> GetByIdAsync(Guid id, CancellationToken ct = default);
+     Task<EventDto> CreateAsync(RegisterEvent dto,CancellationToken ct = default);
 }

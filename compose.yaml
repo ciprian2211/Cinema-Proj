@@ -6,7 +6,7 @@
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgrespassword
-      POSTGRES_DB: seat_booking_db
+      POSTGRES_DB: seat_booking_db_1
     ports:
       - "5432:5432"
     volumes:

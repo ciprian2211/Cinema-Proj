@@ -4,5 +4,5 @@ namespace CinemaProj.Services;
 
 public interface ISeatService
 {
-    Task<List<Seat>> GenerateLayout(int seatsNumber, Event registeredEvent);
+    List<Seat> GenerateLayout(int seatsNumber, Guid eventId);
 }

@@ -5,45 +5,29 @@ namespace CinemaProj.Services;
 
 public class SeatService : ISeatService
 {
-    private readonly AppDbContext _db;
-
-    public SeatService(AppDbContext db)
+    
+    public  List<Seat> GenerateLayout(int seatsNumber, Guid eventId)
     {
-        _db = db;
-    }
+        int columns = Math.Min(10, seatsNumber);
+        int rows = (int)Math.Ceiling(seatsNumber / (double)columns);
 
-    public async Task<List<Seat>> GenerateLayout(int seatsNumber, Event registeredEvent)
-    {
-        int columns = seatsNumber / 2 == 0 ? 1 : seatsNumber / 2;
-        int rows = seatsNumber % columns != 0 ? seatsNumber / columns + 1 : seatsNumber / columns;
-
-        List<Seat> seatings = new List<Seat>();
-        int seatCounter = 0;
-        
-        for (int i = 0; i < columns; i++)
+        var seats = new List<Seat>(seatsNumber);
+        int counter = 0;
+        for (int r = 0; r < rows; r++)
         {
-            for (int j = 0; j < rows; j++)
+            for (int c = 1; c <= columns; c++)
             {
-                if (seatCounter >= seatsNumber)
+                if (counter >= seatsNumber) break;
+                seats.Add(new Seat
                 {
-                    break;
-                }
-
-                char rowLetter = (char)(i + 65);
-                int columnNumber = j + 1;
-                var seat = new Seat
-                {
-                    SeatNumber = $"{rowLetter}{columnNumber}",
-                    Event = registeredEvent,
-                    EventId = registeredEvent.Id
-                };
-                 _db.Seats.Add(seat);
-                seatings.Add(seat);
-                seatCounter++;
+                    Id = Guid.NewGuid(),
+                    EventId = eventId,
+                    SeatNumber = $"{(char)('A' +r)}{c}"
+                });
+                counter++;
             }
         }
 
-        await _db.SaveChangesAsync();
-        return seatings;
+        return seats;
     }
 }

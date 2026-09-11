@@ -1,6 +1,7 @@
 using System.Data.Common;
 using CinemaProj.Data;
 using CinemaProj.DTO;
+using CinemaProj.Exceptions;
 using CinemaProj.Services;
 using Microsoft.EntityFrameworkCore;
 
@@ -13,24 +14,26 @@ public static class EventEndpoints
         var group = app.MapGroup("/api/events");
         group.MapGet("/",GetEvents);
         group.MapGet("/{id:guid}", GetEventById);
-        group.MapGet("/", CreateEvent);
+        group.MapPost("/", CreateEvent);
 
     }
 
-    private static async Task<IResult> CreateEvent(RegisterEvent request, IEventService eventService)
+    private static async Task<IResult> CreateEvent(RegisterEvent request, IEventService eventService,CancellationToken ct)
     {
-        if (string.IsNullOrWhiteSpace(request.Title))
+        try
         {
-            return Results.BadRequest("Title is not valid.");
+            var e = await eventService.CreateAsync(request, ct);
+            return Results.Created($"/api/events/{e.Id}", e);
         }
-
-        if (request.NumbersOfSeatings <= 0)
+        catch (ValidationException validationException)
         {
-            return Results.BadRequest("Number of seatings must be greater than 0 and less or equal to 50.");
+            return Results.BadRequest(new { validationException.Code, validationException.Message });
         }
-
-        var registeredEvent = await eventService.CreateAsync(request);
-        return Results.Created($"/api/events/{registeredEvent.Id}", registeredEvent);
+        catch (DuplicateScreeningException duplicateScreeningException)
+        {
+            return Results.Conflict(new { duplicateScreeningException.Message });
+        }
+        
     }
 
     private static async Task<IResult> GetEvents(IEventService eventService)

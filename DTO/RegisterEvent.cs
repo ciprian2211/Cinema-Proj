@@ -13,6 +13,10 @@ public record RegisterEvent
     [MaxLength(100,ErrorMessage = "Genre should not be more than 100 characters long.")]
     public string Genre { get; set; } = string.Empty;
     [Required]
-    [Range(1,50,ErrorMessage = "Number of seats must be between 1 and 50.")]
-    public int NumbersOfSeatings { get; set; } = 0;
+    [Range(10,100,ErrorMessage = "Number of seats must be between 10 and 100 .")]
+    public int SeatsNumber { get; set; } = 0;
+
+    [Range(30,300)]
+    public int DurationInMinutes { get; set; } = 120;
+    public List<RegisterScreening> Screenings { get; set; } = new();
 }

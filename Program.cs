@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using CinemaProj.Data;
 using CinemaProj.Endpoints;
 using CinemaProj.Services;
@@ -14,7 +15,9 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(connectionString));
 builder.Services.AddScoped<ISeatService, SeatService>();
 builder.Services.AddScoped<IEventService, EventService>();
-
+builder.Services.ConfigureHttpJsonOptions(options =>
+    options.SerializerOptions.Converters.Add(new JsonStringEnumConverter()));
+builder.Services.AddProblemDetails();
 
 var app = builder.Build();
 //endpoints
@@ -26,6 +29,7 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
-app.UseHttpsRedirection();
+app.UseExceptionHandler();
+//app.UseHttpsRedirection();
 app.Run();
 
