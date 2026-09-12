@@ -7,6 +7,7 @@ public class AppDbContext : DbContext
 {
     public AppDbContext(DbContextOptions<AppDbContext> options):base(options){ }
 
+    public DbSet<Room> Rooms => Set<Room>();
     public DbSet<Seat> Seats => Set<Seat>();
     public DbSet<Event> Events => Set<Event>();
     public DbSet<User> Users => Set<User>();
@@ -17,9 +18,21 @@ public class AppDbContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+        
+        modelBuilder.Entity<Room>(entity =>
+        {
+            entity.HasKey(r => r.Id);
+            entity.Property(r => r.Name).IsRequired().HasMaxLength(100);
+            entity.HasMany(r => r.Seats).WithOne(s => s.Room)
+                .HasForeignKey(s => s.RoomId).OnDelete(DeleteBehavior.Cascade);
+            entity.HasMany(r => r.Screenings).WithOne(s => s.Room)
+                .HasForeignKey(s => s.RoomId).OnDelete(DeleteBehavior.Cascade);
+        });
+
         modelBuilder.Entity<Seat>()
-            .HasIndex(s => new { s.EventId, s.SeatNumber })
+            .HasIndex(s => new { s.RoomId, s.SeatNumber })
             .IsUnique();
+
         modelBuilder.Entity<Event>(entity =>
         {
             entity.HasKey(e => e.Id);
@@ -29,12 +42,10 @@ public class AppDbContext : DbContext
             entity.Property(e => e.Genre)
                 .IsRequired()
                 .HasMaxLength(100);
-            entity.HasMany(e => e.SeatTemplate).WithOne(s => s.Event)
-                .HasForeignKey(s => s.EventId).OnDelete(DeleteBehavior.Cascade);
             entity.HasMany(e => e.Screenings).WithOne(s => s.Event)
                 .HasForeignKey(s => s.EventId).OnDelete(DeleteBehavior.Cascade);
-
         });
+
         modelBuilder.Entity<User>(entity =>
         {
             entity.HasKey(u => u.Id);
@@ -47,6 +58,7 @@ public class AppDbContext : DbContext
                 .IsRequired()
                 .HasMaxLength(256);
         });
+        
         modelBuilder.Entity<Screening>(entity =>
         {
             entity.HasKey(s => s.Id);
@@ -60,12 +72,9 @@ public class AppDbContext : DbContext
                 .HasConversion<string>()
                 .HasMaxLength(20)
                 .IsRequired();
-            entity.HasIndex(s => new { s.EventId, s.StartsAt });
-            entity.HasIndex(s => s.StartsAt);
-            entity.HasOne(s => s.Event)
-                .WithMany(e => e.Screenings)
-                .HasForeignKey(s => s.EventId)
-                .OnDelete(DeleteBehavior.Cascade);
+            
+            // Fix: Unique index to prevent double-booking a room at the same time
+            entity.HasIndex(s => new { s.RoomId, s.StartsAt }).IsUnique();
         });
         modelBuilder.Entity<Reservation>(entity =>
         {

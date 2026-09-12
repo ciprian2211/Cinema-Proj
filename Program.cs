@@ -15,6 +15,8 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(connectionString));
 builder.Services.AddScoped<ISeatService, SeatService>();
 builder.Services.AddScoped<IEventService, EventService>();
+builder.Services.AddScoped<IRoomService, RoomService>();
+
 builder.Services.ConfigureHttpJsonOptions(options =>
     options.SerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 builder.Services.AddProblemDetails();
@@ -22,6 +24,7 @@ builder.Services.AddProblemDetails();
 var app = builder.Build();
 //endpoints
 EventEndpoints.Map(app);
+RoomEndpoints.Map(app);
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

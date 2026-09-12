@@ -105,6 +105,25 @@ namespace CinemaProj.Migrations
                     b.ToTable("ReservationSeats");
                 });
 
+            modelBuilder.Entity("CinemaProj.Models.Room", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<int>("SeatsNumber")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Rooms");
+                });
+
             modelBuilder.Entity("CinemaProj.Models.Screening", b =>
                 {
                     b.Property<Guid>("Id")
@@ -117,6 +136,9 @@ namespace CinemaProj.Migrations
                     b.Property<Guid>("EventId")
                         .HasColumnType("uuid");
 
+                    b.Property<Guid>("RoomId")
+                        .HasColumnType("uuid");
+
                     b.Property<DateTimeOffset>("StartsAt")
                         .HasColumnType("timestamptz");
 
@@ -127,9 +149,10 @@ namespace CinemaProj.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("StartsAt");
+                    b.HasIndex("EventId");
 
-                    b.HasIndex("EventId", "StartsAt");
+                    b.HasIndex("RoomId", "StartsAt")
+                        .IsUnique();
 
                     b.ToTable("Screenings");
                 });
@@ -140,7 +163,7 @@ namespace CinemaProj.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<Guid>("EventId")
+                    b.Property<Guid>("RoomId")
                         .HasColumnType("uuid");
 
                     b.Property<string>("SeatNumber")
@@ -149,7 +172,7 @@ namespace CinemaProj.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("EventId", "SeatNumber")
+                    b.HasIndex("RoomId", "SeatNumber")
                         .IsUnique();
 
                     b.ToTable("Seats");
@@ -229,29 +252,42 @@ namespace CinemaProj.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Event");
-                });
-
-            modelBuilder.Entity("CinemaProj.Models.Seat", b =>
-                {
-                    b.HasOne("CinemaProj.Models.Event", "Event")
-                        .WithMany("SeatTemplate")
-                        .HasForeignKey("EventId")
+                    b.HasOne("CinemaProj.Models.Room", "Room")
+                        .WithMany("Screenings")
+                        .HasForeignKey("RoomId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Event");
+
+                    b.Navigation("Room");
+                });
+
+            modelBuilder.Entity("CinemaProj.Models.Seat", b =>
+                {
+                    b.HasOne("CinemaProj.Models.Room", "Room")
+                        .WithMany("Seats")
+                        .HasForeignKey("RoomId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Room");
                 });
 
             modelBuilder.Entity("CinemaProj.Models.Event", b =>
                 {
                     b.Navigation("Screenings");
-
-                    b.Navigation("SeatTemplate");
                 });
 
             modelBuilder.Entity("CinemaProj.Models.Reservation", b =>
                 {
+                    b.Navigation("Seats");
+                });
+
+            modelBuilder.Entity("CinemaProj.Models.Room", b =>
+                {
+                    b.Navigation("Screenings");
+
                     b.Navigation("Seats");
                 });
 

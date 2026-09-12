@@ -6,7 +6,7 @@ namespace CinemaProj.Services;
 public class SeatService : ISeatService
 {
     
-    public  List<Seat> GenerateLayout(int seatsNumber, Guid eventId)
+    public  List<Seat> GenerateLayout(int seatsNumber, Guid roomId)
     {
         int columns = Math.Min(10, seatsNumber);
         int rows = (int)Math.Ceiling(seatsNumber / (double)columns);
@@ -21,7 +21,7 @@ public class SeatService : ISeatService
                 seats.Add(new Seat
                 {
                     Id = Guid.NewGuid(),
-                    EventId = eventId,
+                    RoomId = roomId,
                     SeatNumber = $"{(char)('A' +r)}{c}"
                 });
                 counter++;

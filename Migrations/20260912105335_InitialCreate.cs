@@ -6,33 +6,51 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace CinemaProj.Migrations
 {
     /// <inheritdoc />
-    public partial class AddScreeningsAndReservations : Migration
+    public partial class InitialCreate : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropForeignKey(
-                name: "FK_Seats_Users_UserId",
-                table: "Seats");
+            migrationBuilder.CreateTable(
+                name: "Events",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    Title = table.Column<string>(type: "character varying(150)", maxLength: 150, nullable: false),
+                    Genre = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    SeatsNumber = table.Column<int>(type: "integer", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Events", x => x.Id);
+                });
 
-            migrationBuilder.DropIndex(
-                name: "IX_Seats_UserId",
-                table: "Seats");
+            migrationBuilder.CreateTable(
+                name: "Rooms",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    Name = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    SeatsNumber = table.Column<int>(type: "integer", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Rooms", x => x.Id);
+                });
 
-            migrationBuilder.DropColumn(
-                name: "IsBooked",
-                table: "Seats");
-
-            migrationBuilder.DropColumn(
-                name: "UserId",
-                table: "Seats");
-
-            migrationBuilder.AddColumn<int>(
-                name: "SeatsNumber",
-                table: "Events",
-                type: "integer",
-                nullable: false,
-                defaultValue: 0);
+            migrationBuilder.CreateTable(
+                name: "Users",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    Email = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: false),
+                    Password = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: false),
+                    Role = table.Column<string>(type: "text", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Users", x => x.Id);
+                });
 
             migrationBuilder.CreateTable(
                 name: "Screenings",
@@ -40,6 +58,7 @@ namespace CinemaProj.Migrations
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     EventId = table.Column<Guid>(type: "uuid", nullable: false),
+                    RoomId = table.Column<Guid>(type: "uuid", nullable: false),
                     StartsAt = table.Column<DateTimeOffset>(type: "timestamptz", nullable: false),
                     EndsAt = table.Column<DateTimeOffset>(type: "timestamptz", nullable: false),
                     Status = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false)
@@ -51,6 +70,31 @@ namespace CinemaProj.Migrations
                         name: "FK_Screenings_Events_EventId",
                         column: x => x.EventId,
                         principalTable: "Events",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Screenings_Rooms_RoomId",
+                        column: x => x.RoomId,
+                        principalTable: "Rooms",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Seats",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    SeatNumber = table.Column<string>(type: "text", nullable: false),
+                    RoomId = table.Column<Guid>(type: "uuid", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Seats", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Seats_Rooms_RoomId",
+                        column: x => x.RoomId,
+                        principalTable: "Rooms",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -131,14 +175,27 @@ namespace CinemaProj.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_Screenings_EventId_StartsAt",
+                name: "IX_Screenings_EventId",
                 table: "Screenings",
-                columns: new[] { "EventId", "StartsAt" });
+                column: "EventId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Screenings_StartsAt",
+                name: "IX_Screenings_RoomId_StartsAt",
                 table: "Screenings",
-                column: "StartsAt");
+                columns: new[] { "RoomId", "StartsAt" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Seats_RoomId_SeatNumber",
+                table: "Seats",
+                columns: new[] { "RoomId", "SeatNumber" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Users_Email",
+                table: "Users",
+                column: "Email",
+                unique: true);
         }
 
         /// <inheritdoc />
@@ -148,39 +205,22 @@ namespace CinemaProj.Migrations
                 name: "ReservationSeats");
 
             migrationBuilder.DropTable(
+                name: "Seats");
+
+            migrationBuilder.DropTable(
                 name: "Reservations");
 
             migrationBuilder.DropTable(
                 name: "Screenings");
 
-            migrationBuilder.DropColumn(
-                name: "SeatsNumber",
-                table: "Events");
+            migrationBuilder.DropTable(
+                name: "Users");
 
-            migrationBuilder.AddColumn<bool>(
-                name: "IsBooked",
-                table: "Seats",
-                type: "boolean",
-                nullable: false,
-                defaultValue: false);
+            migrationBuilder.DropTable(
+                name: "Events");
 
-            migrationBuilder.AddColumn<Guid>(
-                name: "UserId",
-                table: "Seats",
-                type: "uuid",
-                nullable: true);
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Seats_UserId",
-                table: "Seats",
-                column: "UserId");
-
-            migrationBuilder.AddForeignKey(
-                name: "FK_Seats_Users_UserId",
-                table: "Seats",
-                column: "UserId",
-                principalTable: "Users",
-                principalColumn: "Id");
+            migrationBuilder.DropTable(
+                name: "Rooms");
         }
     }
 }
