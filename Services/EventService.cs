@@ -28,6 +28,7 @@ public class EventService : IEventService
                 e.Id,
                 e.Title,
                 e.Genre,
+                e.DurationInMinutes,
                 e.Screenings.Count
             )).ToListAsync();
             
@@ -43,9 +44,10 @@ public class EventService : IEventService
                 ev.Id,
                 ev.Title,
                 ev.Genre,
+                ev.DurationInMinutes,
                 ev.Screenings
                     .OrderBy(s => s.StartsAt)
-                    .Select(s => new ScreeningDto(s.Id, s.StartsAt, s.EndsAt, s.Status.ToString(), s.RoomId)).ToList()
+                    .Select(s => new ScreeningListDto(s.Id, s.StartsAt, s.EndsAt, s.Status.ToString(), s.RoomId)).ToList()
             ))
             .FirstOrDefaultAsync(ct);
 
@@ -58,18 +60,21 @@ public class EventService : IEventService
     {
         var title = (dto.Title ?? string.Empty).Trim();
         var genre = (dto.Genre ?? string.Empty).Trim();
-
-        
+        var durationInMinutes = dto.DurationInMinutes;
         if (string.IsNullOrWhiteSpace(title) || title.Length > 150)
             return Result<EventDto>.Failure("Title must be 1..150 chars.");
 
         if (string.IsNullOrWhiteSpace(genre) || genre.Length > 100)
             return Result<EventDto>.Failure("Genre must be 1..100 chars.");
 
+        if (durationInMinutes < 30 || durationInMinutes > 300)
+            return Result<EventDto>.Failure("Duration must be between 30 and 300 minutes.");
+
         var newEvent = new Event
         {
             Title = title,
-            Genre = genre
+            Genre = genre,
+            DurationInMinutes = durationInMinutes
         };
 
         _db.Events.Add(newEvent);
@@ -79,9 +84,33 @@ public class EventService : IEventService
             newEvent.Id,
             newEvent.Title,
             newEvent.Genre,
-            new List<ScreeningDto>()
+            newEvent.DurationInMinutes,
+            new List<ScreeningListDto>()
         );
 
         return Result<EventDto>.Success(eventDto);
+    }
+
+    public async Task<Result<EventDto?>> GetByTitleAsync(string title, CancellationToken ct = default)
+    {
+        var result = await _db.Events
+            .AsNoTracking()
+            .Where(e => e.Title.Contains(title))
+            .Select(ev => new EventDto(
+                ev.Id,
+                ev.Title,
+                ev.Genre,
+                ev.DurationInMinutes,
+                ev.Screenings
+                    .OrderBy(s => s.StartsAt)
+                    .Select(s => new ScreeningListDto(s.Id, s.StartsAt, s.EndsAt, s.Status.ToString(), s.RoomId)).ToList()
+            ))
+            .FirstOrDefaultAsync(ct);
+        if (result is null)
+        {
+            return Result<EventDto?>.Failure($"Cannot find an event with title: {title}");
+        }
+
+        return Result<EventDto?>.Success(result);
     }
 }

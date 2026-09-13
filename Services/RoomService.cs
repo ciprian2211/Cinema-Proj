@@ -18,7 +18,9 @@ public class RoomService : IRoomService
 
     public async Task<Result<List<RoomListDto>>> GetAllAsync()
     {
-        var result = await _db.Rooms.AsNoTracking().Select(r =>
+        var result = await _db.Rooms
+            .AsNoTracking()
+            .Select(r =>
             new RoomListDto(
                 r.Id,
                 r.Name,
@@ -44,7 +46,7 @@ public class RoomService : IRoomService
                         .ToList(),
                     r.Screenings
                         .OrderBy(s => s.StartsAt)
-                        .Select(s => new ScreeningDto(s.Id, s.StartsAt, s.EndsAt, s.Status.ToString(), s.RoomId))
+                        .Select(s => new ScreeningListDto(s.Id, s.StartsAt, s.EndsAt, s.Status.ToString(), s.RoomId))
                         .ToList()
                 ))
             .FirstOrDefaultAsync(ct);
@@ -90,7 +92,7 @@ public class RoomService : IRoomService
                     .ToList(),
                 newRoom.Screenings
                     .Select(s =>
-                        new ScreeningDto(
+                        new ScreeningListDto(
                             s.Id,
                             s.StartsAt,
                             s.EndsAt,
@@ -98,5 +100,34 @@ public class RoomService : IRoomService
                             s.RoomId))
                     .ToList())
             );
+        
+    }
+
+    public async Task<Result<RoomDto?>> GetByNameAsync(string name, CancellationToken ct = default)
+    {
+        var result = await _db.Rooms
+            .AsNoTracking()
+            .Where(r => r.Name.Contains(name))
+            .Select(r =>
+                new RoomDto(
+                    r.Id,
+                    r.Name,
+                    r.SeatsNumber,
+                    r.Seats
+                        .OrderBy(s => s.Id)
+                        .Select(s => new SeatDto(s.Id, s.SeatNumber))
+                        .ToList(),
+                    r.Screenings
+                        .OrderBy(s => s.StartsAt)
+                        .Select(s => new ScreeningListDto(s.Id, s.StartsAt, s.EndsAt, s.Status.ToString(), s.RoomId))
+                        .ToList()
+                ))
+            .FirstOrDefaultAsync(ct);
+        if (result is null)
+        {
+            return Result<RoomDto?>.Failure($"There is no room with name {name}");
+        }
+
+        return Result<RoomDto?>.Success(result);
     }
 }

@@ -42,6 +42,8 @@ public class AppDbContext : DbContext
             entity.Property(e => e.Genre)
                 .IsRequired()
                 .HasMaxLength(100);
+            entity.Property(e => e.DurationInMinutes)
+                .IsRequired();
             entity.HasMany(e => e.Screenings).WithOne(s => s.Event)
                 .HasForeignKey(s => s.EventId).OnDelete(DeleteBehavior.Cascade);
         });
